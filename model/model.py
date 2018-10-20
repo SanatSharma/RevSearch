@@ -9,6 +9,8 @@ from utils import *
 from search_data import *
 import numpy as np
 from sklearn.decomposition import PCA
+import pickle
+
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
@@ -49,6 +51,9 @@ def train_neural_model(train_data, test_data):
                 neural_feats[batch_idx*2 + i] = feats[i,:,0,0]
         
         print(neural_feats)
+        file = open('dump.txt', 'w')
+        pickle.dump(neural_feats, file)
+        file.close()
 
 
     raise Exception("Implement training")
