@@ -24,8 +24,11 @@ if __name__ == "__main__":
     if (args.model == 'Neural'):
         # Get images from train path and call CNN model train function
         if (args.train_type == 'CIFAR10'):
-            train_data, test_data = get_cifar_data()
-            train_neural_model(train_data, test_data)
+            train_data, test_data, image_database = get_cifar_data()
+            print("training")
+            model, neural_feats =  train_neural_model(train_data)
+            print("testing")            
+            evaluate(model, test_data, neural_feats, image_database)
 
     else:
         raise Exception("Please select appropriate model")
