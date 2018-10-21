@@ -24,12 +24,16 @@ class Indexer(object):
     
     # Get the index of the object, if add_object, add object to dict if not present
     def get_index(self, obj, add_object = True):
-        if not add or obj in self.objs_to_ints:
+        if not add_object or obj in self.objs_to_ints:
             return self.index_of(obj)
         new_idx = len(self.ints_to_objs)
         self.objs_to_ints[obj] = new_idx
         self.ints_to_objs[new_idx] = obj
         return new_idx
 
-           
-
+# Add features from feats to feature indexer
+# If add_to_indexer is true, that feature is indexed and added even if it is new
+# If add_to_indexer is false, unseen features will be discarded
+def add_dataset_features(feats, feature_indexer):
+    for i in range(len(feats)):
+        feature_indexer.get_index(feats[i][0])
