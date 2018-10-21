@@ -10,6 +10,7 @@ from search_data import *
 import numpy as np
 from sklearn.decomposition import PCA
 import pickle
+import matplotlib.pyplot as plt
 
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -25,6 +26,7 @@ class Neural(nn.Module):
         print(self.new_resnet)
 
     def forward(self, x, batch_size=1):
+        print(x.shape)
         feats = self.new_resnet(x)
         return feats
 
@@ -41,20 +43,35 @@ def train_neural_model(train_data, test_data):
     batch_size = 10
     neural_net_output_size = 512
     with torch.no_grad():
-        for epoch in range(epochs):
+        for epoch in range(epochs):            
             print(str(epoch) + " of " + str(epochs) + " epochs")
             neural_feats = torch.zeros([len(train_data)*batch_size, neural_net_output_size])
             for batch_idx, (inputs, outputs) in enumerate(train_data):
                 if (batch_idx%100==0):
                     print(str(batch_idx) + " of " + str(len(train_data)) + " examples")
                 inputs = inputs.to(device)
-                feats = model.forward(inputs)
+
+                # Make a grid from batch and display images
+                # out = torchvision.utils.make_grid(inputs)
+                #imshow(out)
+
+                feats = model.forward(inputs, batch_size=batch_size)
                 for i in range(len(feats)):
                     neural_feats[batch_idx*batch_size + i] = feats[i,:,0,0]
-
             print(neural_feats)
             torch.save(neural_feats, 'torch.pt')
-
-
-
+            
     raise Exception("Implement training")
+
+def imshow(inp, title=None):
+    """Imshow for Tensor."""
+    inp = inp.numpy().transpose((1, 2, 0))
+    mean = np.array([0.485, 0.456, 0.406])
+    std = np.array([0.229, 0.224, 0.225])
+    inp = std * inp + mean
+    plt.imshow(inp)
+    if title is not None:
+        plt.title(title)
+    plt.pause(0.1)  # pause a bit so that plots are updated
+
+
