@@ -16,7 +16,7 @@ def get_cifar_data():
     trainset = torchvision.datasets.CIFAR10(root='../data', train=True, download=True, transform=transform)
     
     #index_dataset(trainset)
-    trainloader = torch.utils.data.DataLoader(trainset, batch_size=10, shuffle=True, num_workers=2)
+    trainloader = torch.utils.data.DataLoader(trainset, batch_size=10, shuffle=False, num_workers=2)
 
     testset = torchvision.datasets.CIFAR10(root='../data', train=False, download=True, transform=transform)
     testloader = torch.utils.data.DataLoader(testset, batch_size=2, shuffle=False, num_workers=2)

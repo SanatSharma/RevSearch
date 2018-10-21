@@ -68,14 +68,16 @@ def train_neural_model(train_data):
         
 def evaluate(model, test_data, neural_feats, image_database):
     batch_size = 2
+
     for batch_idx, (inputs, outputs) in enumerate(test_data):
         if batch_idx < 2:
-            out = torchvision.utils.make_grid(inputs)
-            imshow(out, "Test Images")
             inputs = inputs.to(device)
             feats = model.forward(inputs, batch_size=batch_size)
             for i in range(batch_size):
-                indexes = find_closest_images(feats[i,:,0,0], neural_feats)
+                out = torchvision.utils.make_grid(inputs[i])
+                imshow(out, "Test Image")
+
+                indexes = find_closest_images(feats[i,:,0,0], neural_feats) 
                 print(indexes)
                 result_inputs = get_concatentated_images(indexes, image_database)
                 
@@ -84,19 +86,16 @@ def evaluate(model, test_data, neural_feats, image_database):
 
 
 def find_closest_images(target, features, n=5):
-    print(target.shape)
-    print(features.shape)
     # cosine sim(u,v) = dot(u,v)/ (norm(u) * norm(v))
     distances = [target.dot(feat)/(target.norm() * feat.norm()) for feat in features]
-    closest_sorted = sorted(range(len(distances)), key=lambda i: distances[i])
-    # return the top n closest 
-    return closest_sorted[:n+1]
+    distances = np.array(distances)
+    indexes = distances.argsort()
+    t = indexes[-n:]
+    print(distances[t])    
+    # reverse indexes from most matching to least matching
+    t = t[::-1]
+    return t
 
-def get_concatentated_images(indexes, image_database):
-    result = []
-    for idx in indexes:
-        result.append(image_database[idx][0])
-    return result
 
 # This function was taken from StackOverflow
 def imshow(inp, title=None):
@@ -109,4 +108,3 @@ def imshow(inp, title=None):
     if title is not None:
         plt.title(title)
     plt.show()
-

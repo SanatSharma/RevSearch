@@ -28,7 +28,7 @@ if __name__ == "__main__":
             print("training")
             model, neural_feats =  train_neural_model(train_data)
             print("testing")            
-            evaluate(model, test_data, neural_feats, image_database)
+            evaluate(model, train_data, neural_feats, image_database)
 
     else:
         raise Exception("Please select appropriate model")

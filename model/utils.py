@@ -37,3 +37,9 @@ class Indexer(object):
 def add_dataset_features(feats, feature_indexer):
     for i in range(len(feats)):
         feature_indexer.get_index(feats[i][0])
+
+def get_concatentated_images(indexes, image_database):
+    result = []
+    for idx in indexes:
+        result.append(image_database[idx][0])
+    return result
