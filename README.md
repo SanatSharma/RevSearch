@@ -1,7 +1,7 @@
 # RevSearch
 Optimized Reverse Image Search
 
-Initial dataset download link: https://stacks.stanford.edu/file/druid:rb470rw0983/landmarks.zip
+Initial dataset: CIFAR 10
 
 To run the following packages are needed:
 ```
