@@ -40,7 +40,7 @@ def train_neural_model(train_data):
     model.to(device)
     model.eval()
     epochs = 1
-    batch_size = 10
+    batch_size = 2
     neural_net_output_size = 512
     try:
         neural_feats = torch.load('torch.pt')
