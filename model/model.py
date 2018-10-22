@@ -70,19 +70,18 @@ def evaluate(model, test_data, neural_feats, image_database):
     batch_size = 2
 
     for batch_idx, (inputs, outputs) in enumerate(test_data):
-        if batch_idx < 2:
-            inputs = inputs.to(device)
-            feats = model.forward(inputs, batch_size=batch_size)
-            for i in range(batch_size):
-                out = torchvision.utils.make_grid(inputs[i])
-                imshow(out, "Test Image")
+        inputs = inputs.to(device)
+        feats = model.forward(inputs, batch_size=batch_size)
+        for i in range(batch_size):
+            out = torchvision.utils.make_grid(inputs[i])
+            imshow(out, "Test Image")
 
-                indexes = find_closest_images(feats[i,:,0,0], neural_feats) 
-                print(indexes)
-                result_inputs = get_concatentated_images(indexes, image_database)
-                
-                out = torchvision.utils.make_grid(result_inputs)
-                imshow(out, "Results")
+            indexes = find_closest_images(feats[i,:,0,0], neural_feats) 
+            print(indexes)
+            result_inputs = get_concatentated_images(indexes, image_database)
+            
+            out = torchvision.utils.make_grid(result_inputs)
+            imshow(out, "Results")
 
 
 def find_closest_images(target, features, n=5):
