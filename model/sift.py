@@ -22,9 +22,8 @@ class SIFT:
         # count matches
         match_count = {}
         for i, compare_kps in enumerate(compare_kps_collection):
-            if compare_kps is None:
-                count = 0
-            else:
+            count = 0
+            if compare_kps is not None:
                 self.count_keypoint_match(query_kps, compare_kps, lowes_ratio)
             match_count[i] = count
         # find images with the most matches
