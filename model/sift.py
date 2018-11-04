@@ -54,6 +54,7 @@ class SIFT:
         if np.isnan(compare_kps).all():
             return count
         for kp1 in query_kps:
+            if kp1 is None: continue
             pairwise_dist = []
             # Euclidean dist
             for kp2 in compare_kps:
