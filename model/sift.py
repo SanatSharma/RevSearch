@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import math
 import cv2
@@ -5,18 +6,72 @@ import matplotlib.pyplot as plt
 from numpy.linalg import norm
 from sklearn.model_selection import train_test_split
 
+
+def extract_keypoints(imgs, label):
+    keypoints = np.array([sift_extract(i) for i in imgs])
+    path = "./sift_keypoints/"
+    if not os.path.exists(path):
+        os.makedirs(path)
+    np.save('./sift_keypoints/{}_keypoints'.format(label), keypoints)
+    print("Saved keypoints to ./sift_keypoints/{}_keypoints.npy")
+
+def load_keypoints(label):
+    return np.load('./sift_keypoints/{}_keypoints.npy'.format(label))
+    
+def sift_extract(fig, plot=False):
+    fig = np.array(fig, dtype=np.uint8)
+    grey = cv2.cvtColor(fig, cv2.COLOR_BGR2GRAY)
+    sift = cv2.xfeatures2d.SIFT_create()
+    kp, dsc = sift.detectAndCompute(grey,None)
+    if plot:
+        display = cv2.drawKeypoints(grey, kp, fig)
+        plt.imshow(display)
+        plt.show()
+    return dsc
+
+
 class SIFT:
     
     def __init__(self):
         self.retrieve_size = 10
-        self.X_train, self.X_test, self.Y_train, self.Y_test = None, None, None, None
-        self.keypoints = None
-        self.retrieved_idx = None
-        self.retrieved_labels = None
-        self.query_label = None
-        self.compare_labels = None
-        self.report = None
+        self.train_keypoints, self.test_keypoints = None, None
+        self.retrieved_idx, self.retrieved_labels = None, None
+        self.query_label, self.compare_labels = None, None
         self.best_ratio = None
+        self.report = None
+        
+    def fit(self, X_train, Y_train, train_keypoints, plot=False):
+        self.train_keypoints = train_keypoints
+        # find Lowe's ratio with highest F-1 score on train set
+        train_scores = []
+        ratios = [(i+1)*0.05 for i in range(20)]
+        for r in ratios:
+            s = self.__iterate_images(images=X_train, labels=Y_train, ratio=r, metric='f1', step='train')
+            train_scores.append(np.mean(s))
+        self.best_ratio = ratios[np.argmax(train_scores)]
+        if plot:
+            plt.plot(ratios, train_scores)
+            plt.xlabel("Lowe's ratio"); plt.ylabel(metric); plt.grid()
+    
+    def predict(self, X_test, Y_test, test_keypoints, metric='f1'):
+        if not self.best_ratio:
+            print("Call fit() first")
+            raise ValueError
+        self.test_keypoints = test_keypoints
+        score = self.__iterate_images(X_test, Y_test, self.best_ratio, metric, step='test')
+        print(len(X_test), metric, score)
+
+    def __iterate_images(self, images, labels, ratio, metric, step):
+        scores = []
+        kps = self.train_keypoints if step=='train' else self.test_keypoints
+        # i == current query image index
+        for i in range(images.shape[0]):
+            query_kps = kps[i]
+            compare_kps_collection = np.delete(kps, i)
+            self.query_label, self.compare_labels = labels[i], np.delete(labels, i)
+            report = self.find_similar_images(query_kps, compare_kps_collection, ratio)
+            scores.append(report[metric])
+        return scores
 
     def find_similar_images(self, query_kps, compare_kps_collection, lowes_ratio):
         # count matches
@@ -33,21 +88,7 @@ class SIFT:
         # report scores
         self.evaluate()
         return self.report
-    
-    def extract_keypoints(self, imgs):
-        self.keypoints = np.array([self.sift_extract(i) for i in imgs])
-    
-    def sift_extract(self, fig, plot=False):
-        fig = fig.astype(np.uint8)
-        grey = cv2.cvtColor(fig, cv2.COLOR_BGR2GRAY)
-        sift = cv2.xfeatures2d.SIFT_create()
-        kp, dsc = sift.detectAndCompute(grey,None)
-        if plot:
-            display = cv2.drawKeypoints(grey, kp, fig)
-            plt.imshow(display)
-            plt.show()
-        return dsc
-    
+
     def count_keypoint_match(self, query_kps, compare_kps, lowes_ratio):
         count = 0
         if np.isnan(compare_kps).all():
@@ -97,32 +138,12 @@ class SIFT:
             plt.imshow(img)
         plt.show()
         
-    def fit(self, X_train, Y_train):
-        # extract keypoints from training data
-        self.X_train, self.Y_train = X_train, Y_train
-        self.extract_keypoints(self.X_train)
-        # find Lowe's ratio with highest F-1 score
-        ratios = [(i+1)*0.05 for i in range(20)]
-        f1 = []
-        for r in ratios:
-            train_f1 = self.__iterate_images(images=self.X_train,
-                                             labels=self.Y_train, 
-                                             ratio=r, metric='f1')
-            f1.append(np.mean(train_f1))
-        self.best_ratio = ratios[np.argmax(f1)]
-    
-    def predict(self, X_test, Y_test, metric='f1'):
-        self.X_test, self.Y_test = X_test, Y_test
-        return self.__iterate_images(X_test, Y_test, self.best_ratio, metric)
-        
-    def __iterate_images(self, images, labels, ratio, metric):
-        scores = []
-        # i: current query image idx
-        for i in range(images.shape[0]):
-            query_kps = self.keypoints[i]
-            compare_kps_collection = np.delete(self.keypoints, i)
-            self.query_label, self.compare_labels = labels[i], np.delete(labels, i)
-            report = self.find_similar_images(query_kps, compare_kps_collection, ratio)
-            scores.append(report[metric])
-        return scores
-
+    def plot_scores(self, ratios):
+        fig, axarr = plt.subplots(3, sharex=True)
+        axarr[0].plot(ratios, precisions)
+        axass[0].set_xlabel("Lowe's ratio"); axass[0].set_ylabel("precision")
+        axarr[1].plot(ratios, recalls)
+        axass[1].set_xlabel("Lowe's ratio"); axass[1].set_ylabel("recall")
+        axarr[2].plot(ratios, f1s)
+        axass[2].set_xlabel("Lowe's ratio"); axass[0].set_ylabel("F1 score")
+        plt.show()
