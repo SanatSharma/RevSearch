@@ -26,11 +26,10 @@ class Neural(nn.Module):
         print(self.new_resnet)
 
     def forward(self, x, batch_size=1):
-        print(x.shape)
         feats = self.new_resnet(x)
         return feats
 
-    def reduce_dimensionality(self, feats):
+    def reduce_dimensionality(self, features):
         self.pca.fit(features)
         reduced_feats = self.pca.transform(features)
         return reduced_feats
@@ -43,7 +42,7 @@ def train_neural_model(train_data):
     batch_size = 2
     neural_net_output_size = 512
     try:
-        neural_feats = torch.load('torch.pt')
+        neural_feats = torch.load('model/torch.pt')
         return model, neural_feats
     except:
         with torch.no_grad():
@@ -68,7 +67,7 @@ def train_neural_model(train_data):
         
 def evaluate(model, test_data, neural_feats, image_database):
     batch_size = 2
-
+    
     for batch_idx, (inputs, outputs) in enumerate(test_data):
         inputs = inputs.to(device)
         feats = model.forward(inputs, batch_size=batch_size)
@@ -96,7 +95,7 @@ def find_closest_images(target, features, n=5):
     return t
 
 
-# This function was taken from StackOverflow
+# This function was taken directly from Pytorch documentation/examples
 def imshow(inp, title=None):
     """Imshow for Tensor."""
     inp = inp.numpy().transpose((1, 2, 0))
