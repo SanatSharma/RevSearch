@@ -42,7 +42,4 @@ def get_ml_data(train_path):
     cutoff = int(len(files)*.95)
     train_data = a[:cutoff]
     test_data = a[cutoff:]
-
-    print(train_data)
-    print(test_data)
     return train_data, test_data, indexer

@@ -12,26 +12,28 @@ def generate_sift_features(train_path, sift_path):
     extract_keypoints(files, sift_path)
 
 def extract_keypoints(imgs, sift_path):
-    keypoints = np.array([sift_extract(i, True) for i in imgs])
-    if not os.path.exists(sift_path):
-        os.makedirs(sift_path)
+    keypoints = np.array([sift_extract(i, False) for i in imgs])
     np.save(sift_path, keypoints)
-    print("Saved keypoints to ./sift_keypoints/{}_keypoints.npy")
+    print("Saved keypoints")
 
 def load_keypoints(label):
     return np.load('./sift_keypoints/{}_keypoints.npy'.format(label))
 
 def load_keypoints_all(sift_path):
-    return np.load(sift_path)
+    c = np.load(sift_path)
+    a = []
+    for i in range(len(c)):
+        a.extend(c[i][:])
+    return (np.array(a), c)
     
 def sift_extract(fig, plot=False):
     fig = Image.open(fig)
     fig = np.array(fig, dtype=np.uint8)
     grey = cv2.cvtColor(fig, cv2.COLOR_BGR2GRAY)
-    sift = cv2.xfeatures2d.SIFT_create(nfeatures=500)
+    sift = cv2.xfeatures2d.SIFT_create(nfeatures=100, sigma=4)
     kp, dsc = sift.detectAndCompute(grey,None)
     if plot:
-        display = cv2.drawKeypoints(grey, kp, fig)
+        display = cv2.drawKeypoints(grey, kp, fig, flags=cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
         plt.imshow(display)
         plt.show()
     return dsc

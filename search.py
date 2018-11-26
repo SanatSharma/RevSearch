@@ -18,7 +18,8 @@ def arg_parse():
     parser.add_argument('--model', type=str, default='ML', help="Model to run")
     parser.add_argument('--train_type', type=str, default="CIFAR10", help="Data type - Cifar10 or custom")
     parser.add_argument('--train_path', type=str, default='data/Reference/', help='Path to the training set')
-    parser.add_argument('--sift_path', type=str, default='data/sift.npy', help='Path to the training set')
+    parser.add_argument('--sift_path', type=str, default='model/sift.npy', help='Path to the training set')
+    parser.add_argument('--num_clusters', type=int, default=500, help='Number of kmeans clusters for traditional ML model')
     args = parser.parse_args()
     return args
 
@@ -39,8 +40,9 @@ if __name__ == "__main__":
         if args.train_type == 'CUSTOM':
             if not os.path.isfile(args.sift_path):
                 generate_sift_features(args.train_path, args.sift_path)
+            sift_features = load_keypoints_all(args.sift_path)
             train_data, test_data, image_indexer = get_ml_data(args.train_path)
-            train_ml_model(train_data, image_indexer)
+            train_ml_model(train_data, image_indexer, sift_features, args)
             print('training')
 
     else:
