@@ -5,23 +5,30 @@ import cv2
 import matplotlib.pyplot as plt
 from numpy.linalg import norm
 from sklearn.model_selection import train_test_split
+from PIL import Image
 
+def generate_sift_features(train_path, sift_path):
+    files = [os.path.join(train_path, p) for p in sorted(os.listdir(train_path))]
+    extract_keypoints(files, sift_path)
 
-def extract_keypoints(imgs, label):
-    keypoints = np.array([sift_extract(i) for i in imgs])
-    path = "./sift_keypoints/"
-    if not os.path.exists(path):
-        os.makedirs(path)
-    np.save('./sift_keypoints/{}_keypoints'.format(label), keypoints)
+def extract_keypoints(imgs, sift_path):
+    keypoints = np.array([sift_extract(i, True) for i in imgs])
+    if not os.path.exists(sift_path):
+        os.makedirs(sift_path)
+    np.save(sift_path, keypoints)
     print("Saved keypoints to ./sift_keypoints/{}_keypoints.npy")
 
 def load_keypoints(label):
     return np.load('./sift_keypoints/{}_keypoints.npy'.format(label))
+
+def load_keypoints_all(sift_path):
+    return np.load(sift_path)
     
 def sift_extract(fig, plot=False):
+    fig = Image.open(fig)
     fig = np.array(fig, dtype=np.uint8)
     grey = cv2.cvtColor(fig, cv2.COLOR_BGR2GRAY)
-    sift = cv2.xfeatures2d.SIFT_create()
+    sift = cv2.xfeatures2d.SIFT_create(nfeatures=500)
     kp, dsc = sift.detectAndCompute(grey,None)
     if plot:
         display = cv2.drawKeypoints(grey, kp, fig)
