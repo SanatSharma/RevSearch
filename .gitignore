@@ -1,3 +1,4 @@
 data
 .vs
+*.npy
 __pycache__
