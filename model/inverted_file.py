@@ -11,7 +11,7 @@
 # The image with the maximum amount of words should rank first.
 # For images with same amount of words, select randomly?
 
-def train_ml_model(train_data):
+def train_ml_model(train_data, image_indexer):
     for batch_idx, (input, output) in enumerate(train_data):
         print("INPUT")
         print(input)

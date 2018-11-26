@@ -5,6 +5,8 @@ import torch
 import torchvision
 from torchvision import transforms, datasets
 from utils import *
+import os
+import random
 
 def get_cifar_data():
     transform = transforms.Compose([
@@ -27,3 +29,20 @@ def index_dataset(trainset):
     feature_indexer = Indexer()
     add_dataset_features(trainset, feature_indexer)
     print(len(feature_indexer))
+
+def get_ml_data(train_path):
+    indexer = Indexer()
+    files = [os.path.join(train_path, p) for p in sorted(os.listdir(train_path))]
+    for file in files:
+        indexer.get_index(file)
+
+    # Generate training and test set - 95% traning, 5% test
+    a = [i for i in range(len(files))]
+    random.shuffle(a)
+    cutoff = int(len(files)*.95)
+    train_data = a[:cutoff]
+    test_data = a[cutoff:]
+
+    print(train_data)
+    print(test_data)
+    return train_data, test_data, indexer
