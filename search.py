@@ -19,7 +19,7 @@ def arg_parse():
     parser.add_argument('--train_type', type=str, default="CIFAR10", help="Data type - Cifar10 or custom")
     parser.add_argument('--train_path', type=str, default='data/Reference/', help='Path to the training set')
     parser.add_argument('--sift_path', type=str, default='model/sift.npy', help='Path to the training set')
-    parser.add_argument('--num_clusters', type=int, default=500, help='Number of kmeans clusters for traditional ML model')
+    parser.add_argument('--num_clusters', type=int, default=100, help='Number of kmeans clusters for traditional ML model')
     args = parser.parse_args()
     return args
 
