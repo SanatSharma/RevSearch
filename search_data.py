@@ -39,7 +39,7 @@ def get_ml_data(train_path):
     # Generate training and test set - 95% traning, 5% test
     a = [i for i in range(len(files))]
     random.shuffle(a)
-    cutoff = int(len(files)*.95)
+    cutoff = int(len(files)*.05)
     train_data = a[:cutoff]
     test_data = a[cutoff:]
     return train_data, test_data, indexer
