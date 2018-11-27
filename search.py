@@ -42,8 +42,10 @@ if __name__ == "__main__":
                 generate_sift_features(args.train_path, args.sift_path)
             sift_features = load_keypoints_all(args.sift_path)
             train_data, test_data, image_indexer = get_ml_data(args.train_path)
-            train_ml_model(train_data, image_indexer, sift_features, args)
             print('training')
+            trained_model = train_ml_model(train_data, image_indexer, sift_features, args)
+            print('testing')
+            trained_model.evaluate(test_data)
 
     else:
         raise Exception("Please select appropriate model")
