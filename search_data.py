@@ -8,6 +8,9 @@ from utils import *
 import os
 import random
 
+'''
+ Retrieve images from CIFAR-10 dataset using torchvision
+'''
 def get_cifar_data():
     transform = transforms.Compose([
             transforms.Resize((224,224)),
@@ -17,9 +20,8 @@ def get_cifar_data():
 
     trainset = torchvision.datasets.CIFAR10(root='../data', train=True, download=True, transform=transform)
     
-    #index_dataset(trainset)
+    # Construct DataLoaders for training and test sets
     trainloader = torch.utils.data.DataLoader(trainset, batch_size=1, shuffle=False, num_workers=1)
-
     testset = torchvision.datasets.CIFAR10(root='../data', train=False, download=True, transform=transform)
     testloader = torch.utils.data.DataLoader(testset, batch_size=1, shuffle=False, num_workers=1)
 
@@ -30,7 +32,10 @@ def index_dataset(trainset):
     add_dataset_features(trainset, feature_indexer)
     print(len(feature_indexer))
 
-def get_ml_data(train_path):
+'''
+ Parse and retrieve data from train_path. Also construct an image indexer from index to image_path
+'''
+def get_ml_data(train_path, train_cutoff=.95):
     indexer = Indexer()
     files = [os.path.join(train_path, p) for p in sorted(os.listdir(train_path))]
     for file in files:
@@ -39,7 +44,7 @@ def get_ml_data(train_path):
     # Generate training and test set - 95% traning, 5% test
     a = [i for i in range(len(files))]
     random.shuffle(a)
-    cutoff = int(len(files)*.05)
+    cutoff = int(len(files)*train_cutoff)
     train_data = a[:cutoff]
     test_data = a[cutoff:]
     return train_data, test_data, indexer

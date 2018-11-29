@@ -39,23 +39,32 @@ class Indexer(object):
         self.ints_to_objs[new_idx] = obj
         return new_idx
 
-# Add features from feats to feature indexer
-# If add_to_indexer is true, that feature is indexed and added even if it is new
-# If add_to_indexer is false, unseen features will be discarded
+'''
+ Add features from feats to feature indexer
+'''
 def add_dataset_features(feats, feature_indexer):
     for i in range(len(feats)):
         feature_indexer.get_index(feats[i][0])
 
+'''
+ Concatenate image vectors
+'''
 def get_concatentated_images(indexes, image_database):
     result = []
     for idx in indexes:
         result.append(image_database[idx][0])
     return result
 
+'''
+ Find cosine similarity
+'''
 def find_cosine_distance(a, b):
     sim = cdist(a.reshape(1,-1), b.reshape(1,-1), 'cosine').reshape(-1)[0]
     return sim
 
+'''
+ Display similar image output
+'''
 def show_similar_images(query_img, retrieved_images):
     query = plt.figure(figsize=(2,2)).add_subplot(111)
     query.imshow(Image.open(query_img))

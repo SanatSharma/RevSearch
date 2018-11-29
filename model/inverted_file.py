@@ -6,18 +6,22 @@ from scipy.spatial.distance import cdist
 from collections import Counter
 import operator
 import math
-# Loop over all training images
-# Read in sift features for training images
-# construct textons using kmeans 
-# For each image in the training set, find the closest texton for each sift feature
-# Question: How to find a limit of how many words should be in a neighborhood space?
-# Save word to image in database
 
-# Test time
-# Given a new image, extract words 
-# For each word, get the corresponding images. Create an image -> word db
-# The image with the maximum amount of words should rank first.
-# For images with same amount of words, select randomly?
+'''
+Train logic
+ Loop over all training images
+ Read in sift features for training images
+ construct textons using kmeans 
+ For each image in the training set, find the closest texton for each sift feature
+ Question: How to find a limit of how many words should be in a neighborhood space?
+ Save word to image in database
+
+Test time
+ Given a new image, extract words 
+ For each word, get the corresponding images. Create an image -> word db
+ The image with the maximum amount of words should rank first.
+ For images with same amount of words, select randomly?
+'''
 
 class MLModel:
     def __init__(self, word_indexer, image_indexer, word_to_image, image_to_word, one_hot, sift_features, num_images=10):
@@ -29,6 +33,9 @@ class MLModel:
         self.one_hot = one_hot
         self.num_images = num_images
 
+    '''
+     For all images in the test set, retrieve the most similar images from the image bank
+    '''
     def evaluate (self, test_data):
         weighted_words = get_weighted_words(self.word_to_image)
 
@@ -58,9 +65,12 @@ class MLModel:
             image_paths = []
             for idx, i in enumerate(images):
                 image_paths.append(self.image_indexer.get_object(i))
-            show_similar_images(self.image_indexer.get_object(image_idx), image_paths)
+            show_similar_images(self.image_indexer.get_object(image_idx), image_paths       )
 
-
+'''
+ Weight words using tf-idf. Words that occur very frequently need to reduced in importance
+ since they do not provide definitive information
+'''
 def get_weighted_words(word_to_image):
     weights = []
 
@@ -83,7 +93,9 @@ def get_weighted_words(word_to_image):
     norm = [abs(i)/s for i in weights]
     return norm
 
-# Train machine learning model
+'''
+Train machine learning model and return a trained ML model (instance of class MLModel)
+'''
 def train_ml_model(train_data, image_indexer, sift_features, args):
     visual_words, _ = kmeans2(sift_features[0], args.num_clusters)
 
@@ -101,8 +113,6 @@ def train_ml_model(train_data, image_indexer, sift_features, args):
     for idx, image_idx in enumerate(train_data):
         print(image_idx)
         image_sift_features = sift_features[1][image_idx]
-        print(image_sift_features.shape)
-        print(len(image_sift_features))
         image_word_list = find_closest_words(image_sift_features, visual_words)
         c = set()
         for i in image_word_list: c.add(i)
@@ -111,26 +121,22 @@ def train_ml_model(train_data, image_indexer, sift_features, args):
         # Construct word frequencies
         word_freqs = Counter(image_word_list)
         freqs = sorted(word_freqs.items(), key=operator.itemgetter(1), reverse=True)
-        #print(freqs)
-        for i in freqs[:10]:
+        for i in freqs[:15]:
             if i[1] >= .05*len(image_sift_features):
                 a = word_to_image[i[0]]
                 a.add(image_idx)
                 word_to_image[i[0]] = a
     
-    print(word_to_image)
     image_to_word = construct_image_word_index(word_to_image)
     one_hot = one_hot_image_dict(image_to_word, args.num_clusters)
     return MLModel(word_dict,image_indexer,word_to_image,image_to_word, one_hot, sift_features)
 
-# Find closest word for each sift_feature. 
+'''
+ Find closest word for each sift_feature. 
+'''
 def find_closest_words(image_sift_features, mean_features):
     result = []
     for target in image_sift_features:
-        # Find similarity coefficient
-        #sim = [target.dot(feat)/(norm(target) * norm(feat)) for feat in mean_features]
-        #sim = np.array(sim)
-
         # Distance based 
         sim = [cdist(feat.reshape(1,-1), target.reshape(1,-1), 'cosine').reshape(-1)[0] for feat in mean_features]
         #print(max(sim))
@@ -138,7 +144,10 @@ def find_closest_words(image_sift_features, mean_features):
         result.append(sim.argmax())
     return result
 
-# Find the most similar images
+'''
+ Find the n most similar images. Take in the target vector as well as the one-hot vector for all images
+ and find similarity using cosine simmilarity. 
+'''
 def find_closest_images (target, one_hot_images, num_images, n=10):
     target = np.array(target)
     distances = np.zeros(num_images)
@@ -153,6 +162,9 @@ def find_closest_images (target, one_hot_images, num_images, n=10):
     t = t[::-1]
     return t
 
+'''
+ Construct a dictionary link from image index to word index.
+'''
 def construct_image_word_index(word_to_image):
     image_to_word = {}
     for word in word_to_image:
@@ -168,6 +180,9 @@ def construct_image_word_index(word_to_image):
                 image_to_word[image] = s
     return image_to_word
 
+'''
+ Construct one-hot vector for words in an image. If word exists, word_index=1 else 0
+'''
 def one_hot_image_dict(image_to_word, num_clusters):
     one_hot = {}
     for i in image_to_word:
