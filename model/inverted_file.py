@@ -5,6 +5,7 @@ from numpy.linalg import norm
 from scipy.spatial.distance import cdist
 from collections import Counter
 import operator
+from PIL import Image
 import math
 # Loop over all training images
 # Read in sift features for training images
@@ -20,11 +21,14 @@ import math
 # For images with same amount of words, select randomly?
 
 class MLModel:
-    def __init__(self, word_indexer, image_indexer, word_to_image, sift_features):
+    def __init__(self, word_indexer, image_indexer, word_to_image, image_to_word, one_hot, sift_features, num_images=10):
         self.word_indexer = word_indexer
         self.image_indexer = image_indexer
         self.word_to_image = word_to_image
         self.sift_features = sift_features
+        self.image_to_word = image_to_word
+        self.one_hot = one_hot
+        self.num_images = num_images
 
     def evaluate (self, test_data):
         weighted_words = get_weighted_words(self.word_to_image)
@@ -39,14 +43,23 @@ class MLModel:
 
             # Construct word frequencies
             word_freqs = Counter(image_word_list)
+            # Construct one-hot vector for image
+            target = np.zeros(len(self.word_indexer))
+            for i in word_freqs:
+                target[i] = 1
 
+            # Weight word frequencies
             for key in word_freqs.keys():
                 word_freqs[key] = word_freqs[key] * weighted_words[key]
-            freqs = sorted(word_freqs.items(), key=operator.itemgetter(1), reverse=True)
-            print ("FREQS")
-            print(freqs)
+            
+            #freqs = sorted(word_freqs.items(), key=operator.itemgetter(1), reverse=True)
+            #print ("FREQS")
+            #print(freqs)
+            images = find_closest_images(target, self.one_hot, len(self.image_indexer))
 
-        pass
+            for image in images:
+                print(self.image_indexer.get_object(image))
+                Image.open(self.image_indexer.get_object(image)).show()
 
 def get_weighted_words(word_to_image):
     weights = []
@@ -61,7 +74,7 @@ def get_weighted_words(word_to_image):
             idf = math.log10(N / len(word_to_image[key])) 
             weights.append(tf*idf)
     
-    # penalize negative weights by reducing half of the value
+    # penalize negative weights by reducing half of the three-fourths
     for i, val in enumerate(weights):
         if val < 0:
             weights[i] = weights[i]/4
@@ -83,7 +96,6 @@ def train_ml_model(train_data, image_indexer, sift_features, args):
     word_to_image = {}
     for i in range(args.num_clusters):
         word_to_image[i] = set()
-
 
     # Construct inverted file index of word_index to image_index list
     for idx, image_idx in enumerate(train_data):
@@ -107,7 +119,9 @@ def train_ml_model(train_data, image_indexer, sift_features, args):
                 word_to_image[i[0]] = a
     
     print(word_to_image)
-    return MLModel(word_dict,image_indexer,word_to_image,sift_features)
+    image_to_word = construct_image_word_index(word_to_image)
+    one_hot = one_hot_image_dict(image_to_word, args.num_clusters)
+    return MLModel(word_dict,image_indexer,word_to_image,image_to_word, one_hot, sift_features)
 
 # Find closest word for each sift_feature. 
 def find_closest_words(image_sift_features, mean_features):
@@ -123,3 +137,42 @@ def find_closest_words(image_sift_features, mean_features):
         sim = np.array(sim)
         result.append(sim.argmax())
     return result
+
+# Find the most similar images
+def find_closest_images (target, one_hot_images, num_images, n=10):
+    target = np.array(target)
+    distances = np.zeros(num_images)
+
+    for key in one_hot_images:
+        distances[key] = find_cosine_distance(target, one_hot_images[key])
+
+    indexes = distances.argsort()
+    t = indexes[-n:]
+    print(distances[t])    
+    # reverse indexes from most matching to least matching
+    t = t[::-1]
+    return t
+
+def construct_image_word_index(word_to_image):
+    image_to_word = {}
+    for word in word_to_image:
+        images = word_to_image[word]
+        for image in images:
+            if image in image_to_word:
+                s = image_to_word[image]
+                s.add(word)
+                image_to_word[image] = s
+            else:
+                s = set()
+                s.add(word)
+                image_to_word[image] = s
+    return image_to_word
+
+def one_hot_image_dict(image_to_word, num_clusters):
+    one_hot = {}
+    for i in image_to_word:
+        a = np.zeros(num_clusters)
+        for word_idx in image_to_word[i]:
+            a[word_idx] = 1
+        one_hot[i] = a
+    return one_hot
