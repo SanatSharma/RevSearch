@@ -1,5 +1,8 @@
 # utils.py This file may be used for all utility functions
-
+from scipy.spatial.distance import cdist
+import matplotlib.pyplot as plt
+import math
+from PIL import Image
 '''
  Create a bijection betweeen int and object. May be used for reverse indexing
 '''
@@ -22,6 +25,11 @@ class Indexer(object):
             return self.objs_to_ints[obj]
         return -1
     
+    def get_object(self, idx):
+        if idx in self.ints_to_objs:
+            return self.ints_to_objs[idx]
+        return -1
+
     # Get the index of the object, if add_object, add object to dict if not present
     def get_index(self, obj, add_object = True):
         if not add_object or obj in self.objs_to_ints:
@@ -43,3 +51,21 @@ def get_concatentated_images(indexes, image_database):
     for idx in indexes:
         result.append(image_database[idx][0])
     return result
+
+def find_cosine_distance(a, b):
+    sim = cdist(a.reshape(1,-1), b.reshape(1,-1), 'cosine').reshape(-1)[0]
+    return sim
+
+def show_similar_images(query_img, retrieved_images):
+    query = plt.figure(figsize=(2,2)).add_subplot(111)
+    query.imshow(Image.open(query_img))
+    query.set_xlabel("query image")
+    retrieved = plt.figure()
+    row, col = math.floor(len(retrieved_images)//5), 5
+    for i in range(row*col):
+        print(retrieved_images[i])
+        img = Image.open(retrieved_images[i])
+        subplot = retrieved.add_subplot(row,col,i+1)
+        plt.axis('off')
+        plt.imshow(img)
+    plt.show()

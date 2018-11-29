@@ -5,7 +5,6 @@ from numpy.linalg import norm
 from scipy.spatial.distance import cdist
 from collections import Counter
 import operator
-from PIL import Image
 import math
 # Loop over all training images
 # Read in sift features for training images
@@ -56,10 +55,11 @@ class MLModel:
             #print ("FREQS")
             #print(freqs)
             images = find_closest_images(target, self.one_hot, len(self.image_indexer))
+            image_paths = []
+            for idx, i in enumerate(images):
+                image_paths.append(self.image_indexer.get_object(i))
+            show_similar_images(self.image_indexer.get_object(image_idx), image_paths)
 
-            for image in images:
-                print(self.image_indexer.get_object(image))
-                Image.open(self.image_indexer.get_object(image)).show()
 
 def get_weighted_words(word_to_image):
     weights = []
