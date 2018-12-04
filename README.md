@@ -20,7 +20,7 @@ python3 search.py
 
 This project is highly customizable and you can use it to do reverse image search on your own dataset. Some customizable parameters are:
 ```
---model, type=str, default='ML', help="Model to run (NEURAL / ML)"
+--model, type=str, default='ML', help="Model to run (CONV / ML)"
 --train_type, type=str, default="CIFAR10", help="Data type - Cifar10 or CUSTOM"
 --train_path, type=str, default='data/Reference/', help='Path to the training set'
 --sift_path', type=str, default='model/sift.npy', help='Path to the sift file. Only useful if using ML model'
