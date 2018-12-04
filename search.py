@@ -27,7 +27,7 @@ if __name__ == "__main__":
     args = arg_parse()
     print(args)
 
-    if (args.model == 'Neural'):
+    if (args.model == 'CONV'):
         # Get images from train path and call CNN model train function
         if (args.train_type == 'CIFAR10'):
             train_data, test_data, image_database = get_cifar_data()
@@ -35,6 +35,13 @@ if __name__ == "__main__":
             model, neural_feats =  train_neural_model(train_data)
             print("testing")            
             evaluate(model, test_data, neural_feats, image_database)
+        if (args.train_type == 'CUSTOM'):
+            print("Create train/test harness")
+            train_data, test_data, image_indexer = get_ml_data(args.train_path)
+            print("training")
+            model, neural_feats = train_neural_model(train_data, image_indexer, custom=True)
+            print("testing")
+            evaluate(model, test_data, neural_feats, image_indexer, custom=True)
 
     elif args.model == 'ML':
         if args.train_type == 'CUSTOM':

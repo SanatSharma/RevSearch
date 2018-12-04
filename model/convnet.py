@@ -11,6 +11,7 @@ import numpy as np
 from sklearn.decomposition import PCA
 import pickle
 import matplotlib.pyplot as plt
+from PIL import Image
 
 # Run on gpu is present
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -34,12 +35,14 @@ class Neural(nn.Module):
         reduced_feats = self.pca.transform(features)
         return reduced_feats
 
-def train_neural_model(train_data):
+def train_neural_model(train_data, image_indexer=None, custom=False):
     model = Neural()
     model.to(device)
     model.eval()
     epochs = 1
     batch_size = 2
+
+    if custom: batch_size=1
     neural_net_output_size = 512
     try:
         neural_feats = torch.load('model/torch.pt')
@@ -49,38 +52,76 @@ def train_neural_model(train_data):
             for epoch in range(epochs):            
                 print(str(epoch) + " of " + str(epochs) + " epochs")   
                 neural_feats = torch.zeros([len(train_data)*batch_size, neural_net_output_size])
-                for batch_idx, (inputs, outputs) in enumerate(train_data):
-                    if (batch_idx%100==0):
-                        print(str(batch_idx) + " of " + str(len(train_data)) + " examples")
-                    inputs = inputs.to(device)
 
-                    # Make a grid from batch and display images
-                    # out = torchvision.utils.make_grid(inputs)
-                    #imshow(out)
+                if custom:
+                    for batch_idx, image_idx in enumerate(train_data):
+                        if (batch_idx%100==0):
+                            print(str(batch_idx) + " of " + str(len(train_data)) + " examples")
+                        inputs = transform_image(image_indexer.get_object(image_idx))
+                        inputs = inputs.to(device)
+                        print(inputs.shape)
 
-                    feats = model.forward(inputs, batch_size=batch_size)
-                    for i in range(len(feats)):
-                        neural_feats[batch_idx*batch_size + i] = feats[i,:,0,0]
+                        # Make a grid from batch and display images
+                        #out = torchvision.utils.make_grid(inputs)
+                        #imshow(out)
+
+                        feats = model.forward(inputs, batch_size=batch_size)
+                        for i in range(len(feats)):
+                            neural_feats[batch_idx*batch_size + i] = feats[i,:,0,0]
+                else:
+                    for batch_idx, (inputs, outputs) in enumerate(train_data):
+                        if (batch_idx%100==0):
+                            print(str(batch_idx) + " of " + str(len(train_data)) + " examples")
+                        inputs = inputs.to(device)
+
+                        print(inputs.shape)
+
+                        # Make a grid from batch and display images
+                        #out = torchvision.utils.make_grid(inputs)
+                        #imshow(out)
+
+                        feats = model.forward(inputs, batch_size=batch_size)
+                        for i in range(len(feats)):
+                            neural_feats[batch_idx*batch_size + i] = feats[i,:,0,0]
                 print(neural_feats)
                 torch.save(neural_feats, 'torch.pt')
             return model, neural_feats
         
-def evaluate(model, test_data, neural_feats, image_database):
+def evaluate(model, test_data, neural_feats, image_database, custom=False, image_indexer=None):
     batch_size = 2
-    
-    for batch_idx, (inputs, outputs) in enumerate(test_data):
-        inputs = inputs.to(device)
-        feats = model.forward(inputs, batch_size=batch_size)
-        for i in range(batch_size):
-            out = torchvision.utils.make_grid(inputs[i])
-            imshow(out, "Test Image")
 
-            indexes = find_closest_images(feats[i,:,0,0], neural_feats) 
-            print(indexes)
-            result_inputs = get_concatentated_images(indexes, image_database)
-            
-            out = torchvision.utils.make_grid(result_inputs)
-            imshow(out, "Results")
+    if custom:
+        batch_size=1
+        for batch_idx, image_idx in enumerate(test_data):
+            inputs = transform_image(image_indexer.get_object(image_idx))
+            inputs = inputs.to(device)
+            print(inputs.shape)
+            feats = model.forward(inputs, batch_size=batch_size)
+            for i in range(batch_size):
+                out = torchvision.utils.make_grid(inputs[i])
+                imshow(out, "Test Image")
+
+                indexes = find_closest_images(feats[i,:,0,0], neural_feats) 
+                print(indexes)
+                result_inputs = get_concatentated_images(indexes, image_database)
+                
+                out = torchvision.utils.make_grid(result_inputs)
+                imshow(out, "Results")
+
+    else:
+        for batch_idx, (inputs, outputs) in enumerate(test_data):
+            inputs = inputs.to(device)
+            feats = model.forward(inputs, batch_size=batch_size)
+            for i in range(batch_size):
+                out = torchvision.utils.make_grid(inputs[i])
+                imshow(out, "Test Image")
+
+                indexes = find_closest_images(feats[i,:,0,0], neural_feats) 
+                print(indexes)
+                result_inputs = get_concatentated_images(indexes, image_database)
+                
+                out = torchvision.utils.make_grid(result_inputs)
+                imshow(out, "Results")
 
 
 def find_closest_images(target, features, n=5):
@@ -106,3 +147,15 @@ def imshow(inp, title=None):
     if title is not None:
         plt.title(title)
     plt.show()
+
+def transform_image(fig):
+    Image.open(fig)
+
+    transform = transforms.Compose([
+        transforms.Resize((224,224)),
+        transforms.ToTensor(),
+        transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))
+    ])
+
+    inputs = transform(inputs).unsqueeze(0)
+    return inputs

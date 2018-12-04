@@ -3,6 +3,9 @@ from scipy.spatial.distance import cdist
 import matplotlib.pyplot as plt
 import math
 from PIL import Image
+import numpy as np
+import cv2
+
 '''
  Create a bijection betweeen int and object. May be used for reverse indexing
 '''
@@ -52,6 +55,7 @@ def add_dataset_features(feats, feature_indexer):
 def get_concatentated_images(indexes, image_database):
     result = []
     for idx in indexes:
+        print(image_database[idx][0].shape)
         result.append(image_database[idx][0])
     return result
 
