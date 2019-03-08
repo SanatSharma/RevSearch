@@ -1,6 +1,8 @@
 # RevSearch
 Optimized Reverse Image Search for all! This project aims to create a scalable and robust system for reverse Image search. There are 2 types of models implemented: Neural Models, Machine Learning Model. This code is part of the following paper:https://apps.cs.utexas.edu/apps/tech-reports/171206 (User Interfaces for Optimized Reverse Image Search)
 
+For the Neural Model on a custom dataset of San Francisco images, approx. **69%** of our test searches returned at least one relevant image in the top 3 images returned. Average latency was 450ms.
+
 
 Initial dataset: CIFAR 10
 
