@@ -1,5 +1,6 @@
 # RevSearch
-Optimized Reverse Image Search for all! This project aims to create a scalable and robust system for reverse Image search. There are 2 types of models implemented: Neural Models, Machine Learning Model.
+Optimized Reverse Image Search for all! This project aims to create a scalable and robust system for reverse Image search. There are 2 types of models implemented: Neural Models, Machine Learning Model. This code is part of the following paper:https://apps.cs.utexas.edu/apps/tech-reports/171206 (User Interfaces for Optimized Reverse Image Search)
+
 
 Initial dataset: CIFAR 10
 
